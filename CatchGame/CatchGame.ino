@@ -6,7 +6,12 @@ const int collisionBuffer = 6;
 const int bottomLineBuffer = 2;
 int minDropDistance = 10;
 int initialDropInterval = 5000;
+const int lineWidenAmount = 2;
 const bool mute = false;
+const bool debugMode = true;
+
+// MENU SETTINGS
+const int minReturnTime = 300;
 
 // PINS
 const int potPin = A0;
@@ -54,9 +59,15 @@ void setup() {
 }
 
 void loop() {
-  int state = drawTitle();
-  int score = startGame();
-  Serial.print("GAME SCORE: ");
-  Serial.print(score);
-  delay(1000000000000000);
+  switch (drawTitle()) {
+    case 0:
+      drawHelp();
+      break;
+    case 1:
+      break;
+    case 2:
+      int score = startGame();
+      Serial.print(score);
+      break;
+  }
 }
