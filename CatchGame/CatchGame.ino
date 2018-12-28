@@ -1,12 +1,14 @@
 // GAME SETTINGS
-float dropSpeedMultiplier = 1.0;
-float dropSpeedDelta = 0.1;
+int dropSpeedExtra = 0;
+float dropSpeedDelta = 10;
 const int maxDrops = 2;
 const int collisionBuffer = 6;
 const int bottomLineBuffer = 2;
 int minDropDistance = 10;
 int initialDropInterval = 5000;
 const int lineWidenAmount = 2;
+const int bottomLineChange = 1;
+const int highestBottomLine = 10;
 const bool mute = false;
 const bool debugMode = true;
 
@@ -50,6 +52,9 @@ struct drop {
   int ySpeed = 150;
   char sprite;
 };
+
+unsigned int windowStart;
+unsigned int T0;
 
 void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);

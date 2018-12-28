@@ -1,38 +1,28 @@
 void drawHelp() {
-  int windowStart = millis();
+  windowStart = millis();
+  T0 = millis();
   display.clearDisplay();
   display.setCursor(1, 1);
   display.setTextSize(1);
   display.setTextColor(1);
-  printTrimmed("Catch falling objects in order to increase your score!", 21, 0, 5);
-  display.println("*: +1 Point");
-  display.print(char(29));
-  display.println(": Widens cursor");
+  display.println("* $: +1/+5 Point(s)");
+  display.println("+ -: Cursor length");
+  display.print(char(24));
+  display.print(' ');
+  display.print(char(25));
+  display.println(": Cursor elevation");
   display.print(char(19));
-  display.println(": Ends game");
+  display.println("  : End game");
   // Display return message
   display.setCursor(1, SCREEN_HEIGHT - cHeight);
   display.print(char(27));
   display.print(" Press button");
   display.display();
-  while (digitalRead(buttonPin) == LOW or windowStart + minReturnTime > millis()) { }
-}
-
-void printTrimmed(String string, int linewidth, int fromline, int toline) {
-  if (string.length() > linewidth) {
-    int lineCount = (string.length() / linewidth);
-    if (string.length() % linewidth > 0) {
-      lineCount += 1;
-    }
-    for (int i = 0; i < lineCount; i++) {
-      if (fromline <= i and i <= toline) {
-        String sub = string.substring(i * linewidth, (i + 1) * linewidth);
-        sub.trim();
-        display.println(sub);
-      }
-    }
-  } else {
-    display.println(string);
+  while (digitalRead(buttonPin) == LOW or T0 - windowStart < minReturnTime) {
+    T0 = millis();
+    Serial.print(T0);
+    Serial.print(',');
+    Serial.println(windowStart);
+    delay(100);
   }
-  display.display();
 }

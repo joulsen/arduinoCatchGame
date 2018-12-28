@@ -1,14 +1,16 @@
 int drawTitle() {
   int last_state = -1;
-  int windowStart = millis();
+  windowStart = millis();
+  T0 = millis();
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(1);
   display.cp437(true); // Use typesetting code page 437.
   display.setCursor((SCREEN_WIDTH - 10 * 2 * cWidth) / 2, 10);
   display.print("Catch Game");
-  display.display();
-  while (digitalRead(buttonPin) == LOW or windowStart + minReturnTime > millis()) {
+  //display.display();
+  while (digitalRead(buttonPin) == LOW or T0 - windowStart < minReturnTime) {
+    T0 = millis();
     if (analogRead(potPin) / 342 != last_state) {
       last_state = analogRead(potPin) / 342;
       display.fillRect(0, 40, SCREEN_WIDTH, SCREEN_HEIGHT, 0);

@@ -7,27 +7,33 @@ struct drop genDrop() {
   drop drop;
   drop.pos[0] = random(0, SCREEN_WIDTH);
   drop.pos[1] = 0;
-  switch (random(0, 10)) {
-    case 0: drop.sprite = char(29); break;
-    case 1: drop.sprite = char(19); break;
+  switch (random(0, 20)) {
+    case 0: drop.sprite = '$'; break;
+    case 1 or 2: drop.sprite = '+'; break;
+    case 3: drop.sprite = '-'; break;
+    case 4: drop.sprite = char(24); break;
+    case 5: drop.sprite = char(25); break;
+    case 6: drop.sprite = char(19); break;
     default: drop.sprite = '*';
   }
   drop.T0 = millis();
   return drop;
 }
 
-int dropTimer;
+unsigned int dropTimer0, dropTimer1;
 bool dropTimerOn = false;
 bool genDropTimed(int delta) {
+  dropTimer1 = millis();
   if (dropTimerOn) {
-    if (dropTimer + delta < millis()) {
+    if (dropTimer1 - dropTimer0 >= delta) {
+      //if (dropTimer + delta < millis()) {
       dropTimerOn = false;
       drops[dropQueue] = genDrop();
       return true;
     }
   } else {
     dropTimerOn = true;
-    dropTimer = millis();
+    dropTimer0 = millis();
   }
   return false;
 }
@@ -57,25 +63,58 @@ int checkCollision(struct drop *drop, struct cursor *cursor) {
   }
 }
 
-int handleCollision(struct drop drop, struct cursor *cursor) {
-  switch (drop.sprite) {
-    case '*':
-      cursor->score += 1;
-      return 0;
-    case char(29):
-      cursor->length += lineWidenAmount;
-      return 1;
-    case char(19):
-      return -1;
-    default:
-      Serial.println("Error: Unexpected sprite in handleCollision!");
+int handleCollision(struct drop drop, struct cursor *cursor, int collision) {
+  if (collision == 1) {
+    switch (drop.sprite) {
+      case '*':
+        cursor->score += 1;
+        return 2;
+      case '$':
+        cursor->score += 5;
+        return 2;
+      case '+':
+        cursor->length += lineWidenAmount;
+        return 1;
+      case '-':
+        cursor->length -= lineWidenAmount;
+        return 1;
+      case char(24):
+        if (cursor->bottomline > highestBottomLine) {
+          cursor->bottomline -= bottomLineChange;
+        }
+        return 1;
+      case char(25):
+        if (cursor->bottomline > SCREEN_HEIGHT) {
+          cursor->bottomline += bottomLineChange;
+        }
+        return 1;
+      case char(19):
+        return -1;
+    }
+  } else if (collision == -1) {
+        switch (drop.sprite) {
+      case '*':
+        return -1;
+      case '$':
+        return -1;
+      default:
+        return 1;
+    }
+  } else {
+    return 0;
   }
 }
 
+
 // UPDATE POSITIONS AND DRAW GRAPHICS
 void updateDrop(struct drop *drop, int bottomline) {
+  unsigned int cT = millis();
   display.fillRect(drop->pos[0], drop->pos[1], cWidth, cHeight, 0);
-  drop->pos[1] = (millis() - drop->T0) / (drop->ySpeed / dropSpeedMultiplier);
+  //drop->pos[1] = (cT - drop->T0) / (drop->ySpeed / dropSpeedMultiplier);
+  if (cT - drop->T0 >= (drop->ySpeed - dropSpeedDelta)) {
+    drop->pos[1]++;
+    drop->T0 = millis();
+  }
   display.drawChar(drop->pos[0], drop->pos[1], drop->sprite, 1, 0, 1);
 }
 
@@ -100,11 +139,9 @@ void drawScore(struct cursor cursor) {
 
 // MAIN GAME LOOP
 int startGame() {
-  //drop drops[maxDrops];
-  //dropCount = 0;
-  //dropQueue = 0;
+  dropCount = 0;
+  dropQueue = 0;
   display.clearDisplay();
-  display.display();
   buzz('S');
   cursor cursor;
   int last_drop = millis();
@@ -115,41 +152,22 @@ int startGame() {
     genDrops(drops);
     for (int i = 0; i < dropCount; i++) {
       updateDrop(&drops[i], cursor.bottomline);
-      if (checkCollision(&drops[i], &cursor) == 1) {
-        if (handleCollision(drops[i], &cursor) == -1) {
+      switch (handleCollision(drops[i], &cursor, checkCollision(&drops[i], &cursor))) {
+        case 2:
+          dropSpeedExtra -= dropSpeedDelta;
+          dropQueue = i;
+          break;
+        case 1:
+          dropQueue = i;
+          break;
+        case -1:
           buzz('M');
           return cursor.score;
-        }
-        dropQueue = i;
-        dropSpeedMultiplier += dropSpeedDelta;
-      } else if (checkCollision(&drops[i], &cursor) == -1) {
-        if (handleCollision(drops[i], &cursor) != -1) {
-          buzz('M');
-          return cursor.score;
-        }
-        dropQueue = i;
       }
-      /*
-        if (checkCollision(&drops[i], &cursor) == 1) {
-        if (handleCollision(drops[i], &cursor) == -1)  {
-          return cursor.score;
-          buzz('M');
-        } else {
-          dropQueue = i;
-          dropSpeedMultiplier += dropSpeedDelta;
-        }
-        } else if (checkCollision(&drops[i], &cursor) == -1) {
-        if (handleCollision(drops[i], &cursor) != -1) {
-          return cursor.score;
-          dropQueue = i;
-        } else {
-
-        }
-        }*/
+      updateCursor(&cursor);
+      drawScore(cursor);
+      display.display();
     }
-    updateCursor(&cursor);
-    drawScore(cursor);
-    display.display();
   }
 }
 
