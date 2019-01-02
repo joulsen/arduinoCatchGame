@@ -5,12 +5,12 @@ int dropQueue = 0;
 // Generate drop
 struct drop genDrop() {
   drop drop;
-  drop.pos[0] = random(0, SCREEN_WIDTH);
+  drop.pos[0] = random(0, SCREEN_WIDTH - cWidth);
   drop.pos[1] = 0;
   switch (random(0, 20)) {
-    case 0: drop.sprite = '$'; break;
+    case 0: drop.sprite = '$';      break;
     case 1 or 2: drop.sprite = '+'; break;
-    case 3: drop.sprite = '-'; break;
+    case 3: drop.sprite = '-';      break;
     case 4: drop.sprite = char(24); break;
     case 5: drop.sprite = char(25); break;
     case 6: drop.sprite = char(19); break;
@@ -107,14 +107,17 @@ int handleCollision(struct drop drop, struct cursor *cursor, int collision) {
 
 
 // UPDATE POSITIONS AND DRAW GRAPHICS
-void updateDrop(struct drop *drop, int bottomline) {
+void updateDrop(struct drop *drop, struct cursor cursor) {
   unsigned int cT = millis();
   display.fillRect(drop->pos[0], drop->pos[1], cWidth, cHeight, 0);
-  //drop->pos[1] = (cT - drop->T0) / (drop->ySpeed / dropSpeedMultiplier);
-  if (cT - drop->T0 >= (drop->ySpeed - dropSpeedDelta)) {
+  drop->pos[1] = (cT - drop->T0) * drop->ySpeed;
+  //drop->pos[1] = (cT - drop->T0) * 0.008;
+  /*
+  if (cT - drop->T0 >= (drop->ySpeed / speedDivisor)) {
     drop->pos[1]++;
     drop->T0 = millis();
   }
+  */
   display.drawChar(drop->pos[0], drop->pos[1], drop->sprite, 1, 0, 1);
 }
 
@@ -151,7 +154,7 @@ int startGame() {
     }
     genDrops(drops);
     for (int i = 0; i < dropCount; i++) {
-      updateDrop(&drops[i], cursor.bottomline);
+      updateDrop(&drops[i], cursor);
       switch (handleCollision(drops[i], &cursor, checkCollision(&drops[i], &cursor))) {
         case 2:
           dropSpeedExtra -= dropSpeedDelta;

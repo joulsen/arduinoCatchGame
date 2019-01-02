@@ -1,6 +1,7 @@
 // GAME SETTINGS
+const float dropSpeedInit = 0.008;
 int dropSpeedExtra = 0;
-float dropSpeedDelta = 10;
+int dropSpeedDelta = 10;
 const int maxDrops = 2;
 const int collisionBuffer = 6;
 const int bottomLineBuffer = 2;
@@ -8,7 +9,7 @@ int minDropDistance = 10;
 int initialDropInterval = 5000;
 const int lineWidenAmount = 2;
 const int bottomLineChange = 1;
-const int highestBottomLine = 10;
+const int highestBottomLine = 100;
 const bool mute = false;
 const bool debugMode = true;
 
@@ -41,15 +42,13 @@ struct cursor {
   int potField[2] = {0, 1023};
   int pos;
   int bottomline = SCREEN_HEIGHT - 1;
-  bool reverse = false;
-  bool mirror = false;
   int score = 0;
 };
 
 struct drop {
   int pos[2];
-  unsigned long T0;
-  int ySpeed = 150;
+  unsigned int T0;
+  float ySpeed = dropSpeedInit;
   char sprite;
 };
 
@@ -59,7 +58,7 @@ unsigned int T0;
 void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   Serial.begin(9600);
-  randomSeed(1500);
+  randomSeed(analogRead(A1));
   pinMode(buttonPin, INPUT);
 }
 
@@ -69,10 +68,8 @@ void loop() {
       drawHelp();
       break;
     case 1:
-      break;
-    case 2:
       int score = startGame();
-      Serial.print(score);
+      showScore(score);
       break;
   }
 }

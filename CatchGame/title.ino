@@ -11,20 +11,16 @@ int drawTitle() {
   //display.display();
   while (digitalRead(buttonPin) == LOW or T0 - windowStart < minReturnTime) {
     T0 = millis();
-    if (analogRead(potPin) / 342 != last_state) {
-      last_state = analogRead(potPin) / 342;
+    if (analogRead(potPin) / 512 != last_state) {
+      last_state = analogRead(potPin) / 512;
       display.fillRect(0, 40, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
       display.setCursor((SCREEN_WIDTH - 8 * 2 * cWidth) / 2, 40);
-      if (last_state == 2) {
+      if (last_state == 1) {
         display.print("  PLAY ");
-        display.write(16);
-      } else if (last_state == 1) {
-        display.write(17);
-        display.print(" OPTI ");
         display.write(16);
       } else if (last_state == 0) {
         display.write(17);
-        display.print(" HELP  ");
+        display.print(" HELP");
       }
       display.display();
     }
