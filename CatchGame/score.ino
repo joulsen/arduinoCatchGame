@@ -1,3 +1,4 @@
+// Draw score screen
 void showScore(int score) {
   display.clearDisplay();
   display.setTextSize(2);

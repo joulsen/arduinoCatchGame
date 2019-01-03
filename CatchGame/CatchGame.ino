@@ -10,7 +10,7 @@ const int initDropInterval = 3500;
 const int elevationChange = 10;
 const int lengthChange = 5;
 // MISC
-const bool mute = true;
+const bool mute = false;
 // MENU
 const int minReturnTime = 300;
 

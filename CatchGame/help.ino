@@ -1,3 +1,4 @@
+// Draw help screen
 void drawHelp() {
   windowStart = millis();
   unsigned int cT = millis();

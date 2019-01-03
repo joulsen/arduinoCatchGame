@@ -98,15 +98,15 @@ void drawScore(struct cursor cursor) {
 void buzz(char mode) {
   if (!mute) {
     switch (mode) {
-      case 'H':
+      case 'H': // Hit
         tone(piezoPin, 440, 100);
         break;
-      case 'L':
+      case 'L': // Loss
         tone(piezoPin, 196, 100);
         delay(150);
         tone(piezoPin, 196, 250);
         break;
-      case 'S':
+      case 'S': // Start
         int tones[3] = {880, 932, 988};
         for (int i = 0; i < 3; i++) {
           tone(piezoPin, tones[i], 100);
@@ -123,6 +123,7 @@ int catchGame() {
   drop drops[maxDrops];
   cursor cursor;
   lastDrop = 0;
+  buzz('S');
   while (cursor.playing) {
     spawnDrops(drops, maxDrops);
     dropInterval = initDropInterval / (1.0 + (float(cursor.score) / 15.0)); // Increasing difficulty

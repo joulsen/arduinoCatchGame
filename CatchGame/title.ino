@@ -1,11 +1,12 @@
+// Draw title screen.
 int drawTitle() {
   int last_state = -1;
   windowStart = millis();
   unsigned int cT = millis();
   display.clearDisplay();
-  display.setTextSize(2);
+  display.setTextSize(2); // Double text size.
   display.setTextColor(1);
-  display.cp437(true); // Use typesetting code page 437.
+  display.cp437(true); // Use typesetting code page 437 as listed in Adafruit GFX library.
   display.setCursor((SCREEN_WIDTH - 10 * 2 * cWidth) / 2, 10);
   display.print("Catch Game");
   //display.display();
