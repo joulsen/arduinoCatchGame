@@ -1,3 +1,12 @@
+/* - - Catch Game for Arduino - -
+ * Catch the falling objects to earn points. Miss a point and the game is over.
+ * Controls using a potentiometer and displays using an I2C 128x64 OLED display.
+ * Written 2018
+ * by Andreas Just Poulsen
+ * for AAU Imperative Programming Exam (Imperative Programming (IMPR) (EIT1, ITC1, ST1) - AAL E18 [E18-27624])
+ * last modified: 03-01-2019
+*/
+
 // SETTINGS
 // CURSOR
 const int initCursorLength = 10;
