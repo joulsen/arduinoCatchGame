@@ -13,6 +13,6 @@ void showScore(int score) {
   display.setCursor((SCREEN_WIDTH - scoreDigits * 2 * cWidth) / 2, 15 + 2*cHeight);
   display.print(score);
   display.display();
-  delay(1000);
+  delay(1500);
   return;
 }

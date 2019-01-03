@@ -5,6 +5,8 @@ void drawHelp() {
   display.setCursor(1, 1);
   display.setTextSize(1);
   display.setTextColor(1);
+
+  // Display info screen
   display.println("* $: +1/+5 Point(s)");
   display.println("+ -: Cursor length");
   display.print(char(24));
@@ -13,6 +15,7 @@ void drawHelp() {
   display.println(": Cursor elevation");
   display.print(char(19));
   display.println("  : End game");
+
   // Display return message
   display.setCursor(1, SCREEN_HEIGHT - cHeight);
   display.print(char(27));
