@@ -1,6 +1,6 @@
 void drawHelp() {
   windowStart = millis();
-  T0 = millis();
+  unsigned int cT = millis();
   display.clearDisplay();
   display.setCursor(1, 1);
   display.setTextSize(1);
@@ -18,11 +18,7 @@ void drawHelp() {
   display.print(char(27));
   display.print(" Press button");
   display.display();
-  while (digitalRead(buttonPin) == LOW or T0 - windowStart < minReturnTime) {
-    T0 = millis();
-    Serial.print(T0);
-    Serial.print(',');
-    Serial.println(windowStart);
-    delay(100);
+  while (digitalRead(buttonPin) == LOW or cT - windowStart < minReturnTime) {
+    cT = millis();
   }
 }

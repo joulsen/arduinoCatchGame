@@ -1,8 +1,6 @@
-drop drops[maxDrops];
-int dropCount = 0;
-int dropQueue = 0;
+unsigned int lastDrop;
+unsigned int dropInterval = initDropInterval;
 
-// Generate drop
 struct drop genDrop() {
   drop drop;
   drop.pos[0] = random(0, SCREEN_WIDTH - cWidth);
@@ -16,116 +14,65 @@ struct drop genDrop() {
     case 6: drop.sprite = char(19); break;
     default: drop.sprite = '*';
   }
-  drop.T0 = millis();
+  drop.born = millis();
+  drop.enabled = true;
   return drop;
 }
 
-unsigned int dropTimer0, dropTimer1;
-bool dropTimerOn = false;
-bool genDropTimed(int delta) {
-  dropTimer1 = millis();
-  if (dropTimerOn) {
-    if (dropTimer1 - dropTimer0 >= delta) {
-      //if (dropTimer + delta < millis()) {
-      dropTimerOn = false;
-      drops[dropQueue] = genDrop();
-      return true;
+void spawnDrops(struct drop drops[], int dropCount) {
+  for (int i = 0; i < dropCount; i++) {
+    unsigned int cT = millis();
+    if (!drops[i].enabled and cT - lastDrop > dropInterval) {
+      drops[i] = genDrop();
+      lastDrop = millis();
     }
-  } else {
-    dropTimerOn = true;
-    dropTimer0 = millis();
-  }
-  return false;
-}
-
-void genDrops(struct drop drops[]) {
-  if (dropCount != maxDrops) {
-    if (genDropTimed(initialDropInterval)) {
-      dropCount++;
-      dropQueue++;
-    }
-  } else if (dropCount != dropQueue and dropQueue != -1) {
-    drops[dropQueue] = genDrop();
-    dropQueue = -1;
   }
 }
 
-int checkCollision(struct drop *drop, struct cursor *cursor) {
-  if (drop->pos[1] <= cursor->bottomline + bottomLineBuffer and drop->pos[1] >= cursor->bottomline) {
-    if (cursor->pos - collisionBuffer <= drop->pos[0] and drop->pos[0] <= cursor->pos + cursor->length + collisionBuffer) {
-      buzz('H');
-      return 1;
-    } else {
-      return -1;
-    }
-  } else {
-    return 0;
-  }
-}
-
-int handleCollision(struct drop drop, struct cursor *cursor, int collision) {
-  if (collision == 1) {
-    switch (drop.sprite) {
-      case '*':
-        cursor->score += 1;
-        return 2;
-      case '$':
-        cursor->score += 5;
-        return 2;
-      case '+':
-        cursor->length += lineWidenAmount;
-        return 1;
-      case '-':
-        cursor->length -= lineWidenAmount;
-        return 1;
-      case char(24):
-        if (cursor->bottomline > highestBottomLine) {
-          cursor->bottomline -= bottomLineChange;
+void checkCollision(struct drop *drop, struct cursor *cursor) {
+  if (drop->pos[1] > cursor->bottomline) {
+    if (drop->enabled) {
+      if (cursor->pos - captureBuffer <= drop->pos[0] and drop->pos[0] <= cursor->pos + cursor->length + captureBuffer) {
+        buzz('H');
+        switch (drop->sprite) {
+          case '*': cursor->score += 1;                           break;
+          case '$': cursor->score += 5;                           break;
+          case '+': cursor->length += lengthChange;               break;
+          case '-': cursor->length -= lengthChange;               break;
+          case char(24): cursor->bottomline -= elevationChange;   break;
+          case char(25): cursor->bottomline += elevationChange;   break;
+          case char(19): cursor->playing = false;                 break;
+          default: Serial.println("ERROR: Unexpected sprite in checkCollision");
         }
-        return 1;
-      case char(25):
-        if (cursor->bottomline > SCREEN_HEIGHT) {
-          cursor->bottomline += bottomLineChange;
+      } else {
+        if (drop->sprite == '*' or drop->sprite == '$') {
+          cursor->playing = false;
         }
-        return 1;
-      case char(19):
-        return -1;
+      }
+      drop->enabled = false;
     }
-  } else if (collision == -1) {
-        switch (drop.sprite) {
-      case '*':
-        return -1;
-      case '$':
-        return -1;
-      default:
-        return 1;
-    }
-  } else {
-    return 0;
   }
 }
 
+void ensureBoundaries(struct cursor *cursor) {
+  if (cursor->bottomline > SCREEN_HEIGHT - 1) {
+    cursor->bottomline = SCREEN_HEIGHT - 1;
+  }
+}
 
-// UPDATE POSITIONS AND DRAW GRAPHICS
 void updateDrop(struct drop *drop, struct cursor cursor) {
-  unsigned int cT = millis();
   display.fillRect(drop->pos[0], drop->pos[1], cWidth, cHeight, 0);
-  drop->pos[1] = (cT - drop->T0) * drop->ySpeed;
-  //drop->pos[1] = (cT - drop->T0) * 0.008;
-  /*
-  if (cT - drop->T0 >= (drop->ySpeed / speedDivisor)) {
-    drop->pos[1]++;
-    drop->T0 = millis();
+  unsigned int cT = millis();
+  if (drop->enabled) {
+    drop->pos[1] = (cT - drop->born) * (drop->ySpeed * (1.0 + float(cursor.score) / 20.0));
+    display.drawChar(drop->pos[0], drop->pos[1], drop->sprite, 1, 0, 1);
   }
-  */
-  display.drawChar(drop->pos[0], drop->pos[1], drop->sprite, 1, 0, 1);
 }
 
 void updateCursor(struct cursor *cursor) {
   display.fillRect(0, cursor->bottomline, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
   cursor->pos = map(analogRead(potPin), 0, 1023, SCREEN_WIDTH - cursor->length, 0);
   display.drawLine(cursor->pos, cursor->bottomline, cursor->pos + cursor->length, cursor->bottomline, 1);
-  //display.display();
 }
 
 void drawScore(struct cursor cursor) {
@@ -137,51 +84,15 @@ void drawScore(struct cursor cursor) {
   display.print("SCORE");
   display.setCursor(SCREEN_WIDTH - 5 * cWidth, cHeight + 1);
   display.print(cursor.score);
-  //display.display();
 }
 
-// MAIN GAME LOOP
-int startGame() {
-  dropCount = 0;
-  dropQueue = 0;
-  display.clearDisplay();
-  buzz('S');
-  cursor cursor;
-  int last_drop = millis();
-  while (true) {
-    if (debugMode) {
-      debug(cursor, drops);
-    }
-    genDrops(drops);
-    for (int i = 0; i < dropCount; i++) {
-      updateDrop(&drops[i], cursor);
-      switch (handleCollision(drops[i], &cursor, checkCollision(&drops[i], &cursor))) {
-        case 2:
-          dropSpeedExtra -= dropSpeedDelta;
-          dropQueue = i;
-          break;
-        case 1:
-          dropQueue = i;
-          break;
-        case -1:
-          buzz('M');
-          return cursor.score;
-      }
-      updateCursor(&cursor);
-      drawScore(cursor);
-      display.display();
-    }
-  }
-}
-
-// BUZZ FUNCTION FOR PIEZO SPEAKER
 void buzz(char mode) {
   if (!mute) {
     switch (mode) {
       case 'H':
         tone(piezoPin, 440, 100);
         break;
-      case 'M':
+      case 'L':
         tone(piezoPin, 196, 100);
         delay(150);
         tone(piezoPin, 196, 250);
@@ -197,17 +108,23 @@ void buzz(char mode) {
   }
 }
 
-// DEBUG FUNCTION
-
-void debug(struct cursor cursor, struct drop drops[]) {
-  Serial.print(millis());
-  Serial.print(',');
-  Serial.print(cursor.pos);
-  for (int i = 0; i < dropCount; i++) {
-    Serial.print(',');
-    Serial.print(drops[i].pos[0]);
-    Serial.print(',');
-    Serial.print(drops[i].pos[1]);
+int catchGame() {
+  display.clearDisplay();
+  drop drops[maxDrops];
+  cursor cursor;
+  lastDrop = 0;
+  while (cursor.playing) {
+    spawnDrops(drops, maxDrops);
+    dropInterval = initDropInterval / (1.0 + (float(cursor.score) / 15.0));
+    for (int i = 0; i < maxDrops; i++) {
+      updateDrop(&drops[i], cursor);
+      checkCollision(&drops[i], &cursor);
+    }
+    updateCursor(&cursor);
+    ensureBoundaries(&cursor);
+    drawScore(cursor);
+    display.display();
   }
-  Serial.println();
+  buzz('L');
+  return cursor.score;
 }

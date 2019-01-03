@@ -1,7 +1,7 @@
 int drawTitle() {
   int last_state = -1;
   windowStart = millis();
-  T0 = millis();
+  unsigned int cT = millis();
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(1);
@@ -9,8 +9,8 @@ int drawTitle() {
   display.setCursor((SCREEN_WIDTH - 10 * 2 * cWidth) / 2, 10);
   display.print("Catch Game");
   //display.display();
-  while (digitalRead(buttonPin) == LOW or T0 - windowStart < minReturnTime) {
-    T0 = millis();
+  while (digitalRead(buttonPin) == LOW or cT - windowStart < minReturnTime) {
+    cT = millis();
     if (analogRead(potPin) / 512 != last_state) {
       last_state = analogRead(potPin) / 512;
       display.fillRect(0, 40, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
