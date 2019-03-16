@@ -4,24 +4,24 @@
  * Written 2018
  * by Andreas Just Poulsen
  * for AAU Imperative Programming Exam (Imperative Programming (IMPR) (EIT1, ITC1, ST1) - AAL E18 [E18-27624])
- * last modified: 03-01-2019
+ * last modified: 16-03-2019
 */
 
 // SETTINGS
 // CURSOR
-const int initCursorLength = 10;
-const int initBottomLine = 63;
-const int captureBuffer = 1;
+const int initCursorLength = 10;    // Initial length of cursor
+const int initBottomLine = 63;      // Initial vertical position of cursor
+const int captureBuffer = 1;        // Horizontal buffer for catching drops
 // DROPS
-const int maxDrops = 5;
-const float initDropSpeed = 0.008;
-const int initDropInterval = 3500;
-const int elevationChange = 10;
-const int lengthChange = 5;
+const int maxDrops = 5;             // Max drops on screen
+const float initDropSpeed = 0.008;  // Initial speed in pixels pr. milliseconds
+const int initDropInterval = 3500;  // Initial interval between drops
+const int elevationChange = 10;     // Elevation change when capturing up or down arrow
+const int lengthChange = 5;         // Lenght change when capturing + or -
 // MISC
-const bool mute = false;
+const bool mute = false;            // Piezo speaker mute
 // MENU
-const int minReturnTime = 300;
+const int minReturnTime = 300;      // Minimum time spent on menu before being able to return
 
 // PINS
 const int potPin = A0;
